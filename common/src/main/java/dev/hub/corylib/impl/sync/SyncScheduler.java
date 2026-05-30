@@ -44,7 +44,7 @@ public final class SyncScheduler {
 
     public void sendInitial(ServerPlayer player) {
         List<DataSyncMessage.Update> updates = new ArrayList<>();
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.level().getServer();
         for (DataEntry<?, ?> entry : DataRegistry.INSTANCE.entries()) {
             if (!entry.synced()) {
                 continue;
@@ -54,7 +54,7 @@ public final class SyncScheduler {
             } else if (isScope(entry, Scopes.SERVER) && server != null) {
                 addUpdate(updates, entry, server);
             } else if (isScope(entry, Scopes.DIMENSION)) {
-                addUpdate(updates, entry, player.serverLevel());
+                addUpdate(updates, entry, player.level());
             }
         }
         if (!updates.isEmpty()) {

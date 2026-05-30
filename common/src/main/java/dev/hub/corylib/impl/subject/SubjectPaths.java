@@ -2,7 +2,7 @@ package dev.hub.corylib.impl.subject;
 
 import dev.hub.corylib.api.entry.DataEntry;
 import dev.hub.corylib.api.subject.ClientSubject;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,7 +20,7 @@ public final class SubjectPaths {
             return server.getWorldPath(LevelResource.ROOT).resolve("corylib").resolve(entry.modId()).resolve(keyFile);
         }
         if (subject instanceof ServerLevel level) {
-            ResourceLocation id = level.dimension().location();
+            Identifier id = level.dimension().identifier();
             return level.getServer().getWorldPath(LevelResource.ROOT)
                     .resolve("corylib")
                     .resolve(entry.modId())
@@ -30,7 +30,7 @@ public final class SubjectPaths {
                     .resolve(keyFile);
         }
         if (subject instanceof ServerPlayer player) {
-            return player.getServer().getWorldPath(LevelResource.ROOT)
+            return player.level().getServer().getWorldPath(LevelResource.ROOT)
                     .resolve("corylib")
                     .resolve(entry.modId())
                     .resolve("player")

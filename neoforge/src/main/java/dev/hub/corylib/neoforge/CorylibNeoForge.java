@@ -9,7 +9,7 @@ public final class CorylibNeoForge {
     public CorylibNeoForge() {
         // Run our common setup.
         Corylib.init();
-        if (FMLEnvironment.dist.isClient()) {
+        if (FMLEnvironment.getDist().isClient()) {
             Corylib.initClient();
         }
     }
