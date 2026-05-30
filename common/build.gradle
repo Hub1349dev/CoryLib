@@ -1,0 +1,72 @@
+architectury {
+    common rootProject.enabled_platforms.split(',')
+}
+
+dependencies {
+    // We depend on Fabric Loader here to use the Fabric @Environment annotations,
+    // which get remapped to the correct annotations on each platform.
+    // Do NOT use other classes from Fabric Loader.
+    modImplementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
+
+    modImplementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+}
+
+sourceSets {
+    contractTest {
+        java.srcDir 'src/contractTest/java'
+        compileClasspath += sourceSets.main.output + configurations.compileClasspath
+        runtimeClasspath += output + compileClasspath + sourceSets.main.runtimeClasspath
+    }
+}
+
+tasks.register('contractTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs executable CoryLib contract tests against real code paths.'
+    classpath = sourceSets.contractTest.runtimeClasspath
+    mainClass = 'dev.hub.corylib.contract.CoryLibContractTests'
+}
+
+tasks.register('staticBoundaryCheck') {
+    group = 'verification'
+    description = 'Fails on source-boundary mistakes that runtime contract tests cannot see.'
+
+    doLast {
+        def errors = []
+        def javaFiles = fileTree('src/main/java') {
+            include '**/*.java'
+        }.files
+
+        javaFiles.each { file ->
+            def relative = project.relativePath(file).replace('\\', '/')
+            def text = file.text
+
+            if (text =~ /==\s*(Scopes|Storage)\./ || text =~ /(Scopes|Storage)\.[A-Z_]+\s*==/) {
+                errors << "${relative} compares scope/storage constants by identity. Use registry/equality helpers instead."
+            }
+            if (text =~ /!=\s*(Scopes|Storage)\./ || text =~ /(Scopes|Storage)\.[A-Z_]+\s*!=/) {
+                errors << "${relative} compares scope/storage constants by identity. Use registry/equality helpers instead."
+            }
+            if (relative.contains('/api/') && text.contains('import dev.hub.corylib.impl.subject.')) {
+                errors << "${relative} exposes implementation subject types from the public API package."
+            }
+            if (text.contains('import net.minecraft.client.') &&
+                    relative != 'src/main/java/dev/hub/corylib/impl/lifecycle/ClientLifecycleManager.java') {
+                errors << "${relative} imports client-only Minecraft classes outside the client lifecycle boundary."
+            }
+        }
+
+        def readme = rootProject.file('README.md')
+        if (readme.exists() && readme.text.contains('dev.hub.corylib.impl.')) {
+            errors << 'README.md documents implementation packages as public API.'
+        }
+
+        if (!errors.isEmpty()) {
+            throw new GradleException("CoryLib static boundary check failed:\n - " + errors.join('\n - '))
+        }
+    }
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('contractTest')
+    dependsOn tasks.named('staticBoundaryCheck')
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "corylib",
+  "version": "${version}",
+  "name": "CoryLib",
+  "description": "",
+  "authors": [
+    "hubDev"
+  ],
+  "contact": {
+    "homepage": ""
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/corylib/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.hub.corylib.fabric.CorylibFabric"
+    ],
+    "client": [
+      "dev.hub.corylib.fabric.client.CorylibFabricClient"
+    ]
+  },
+  "mixins": [
+    "corylib.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "architectury": ">=13.0.8",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "another-mod": "*"
+  }
+}
