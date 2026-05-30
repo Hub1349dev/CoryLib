@@ -1,12 +1,17 @@
 package dev.hub.corylib.impl.sync;
 
-import dev.architectury.networking.simple.MessageType;
-import dev.architectury.networking.simple.SimpleNetworkManager;
+import dev.architectury.networking.NetworkManager;
 import dev.hub.corylib.Corylib;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
 
 public final class CoryNetworking {
-    private static final SimpleNetworkManager NETWORK = SimpleNetworkManager.create(Corylib.MOD_ID);
-    public static final MessageType DATA_SYNC = NETWORK.registerS2C("data_sync", DataSyncMessage::new);
+    public static final CustomPacketPayload.Type<DataSyncMessage> DATA_SYNC =
+            new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(Corylib.MOD_ID, "data_sync"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, DataSyncMessage> DATA_SYNC_CODEC =
+            StreamCodec.ofMember(DataSyncMessage::write, DataSyncMessage::new);
 
     private static boolean registered;
 
@@ -18,6 +23,8 @@ public final class CoryNetworking {
             return;
         }
         registered = true;
-        DATA_SYNC.toString();
+        NetworkManager.registerS2CPayloadType(DATA_SYNC, DATA_SYNC_CODEC);
+        NetworkManager.registerReceiver(NetworkManager.Side.S2C, DATA_SYNC, DATA_SYNC_CODEC,
+                (message, context) -> context.queue(message::handle));
     }
 }

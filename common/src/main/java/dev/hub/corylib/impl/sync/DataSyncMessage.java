@@ -3,14 +3,16 @@ package dev.hub.corylib.impl.sync;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import dev.architectury.networking.NetworkManager;
-import dev.architectury.networking.simple.BaseS2CMessage;
-import dev.architectury.networking.simple.MessageType;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public final class DataSyncMessage extends BaseS2CMessage {
+public final class DataSyncMessage implements CustomPacketPayload {
     private final List<Update> updates;
 
     public DataSyncMessage(List<Update> updates) {
@@ -27,11 +29,10 @@ public final class DataSyncMessage extends BaseS2CMessage {
     }
 
     @Override
-    public MessageType getType() {
+    public Type<? extends CustomPacketPayload> type() {
         return CoryNetworking.DATA_SYNC;
     }
 
-    @Override
     public void write(RegistryFriendlyByteBuf buf) {
         buf.writeVarInt(updates.size());
         for (Update update : updates) {
@@ -40,11 +41,22 @@ public final class DataSyncMessage extends BaseS2CMessage {
         }
     }
 
-    @Override
-    public void handle(NetworkManager.PacketContext context) {
+    public void handle() {
         for (Update update : updates) {
             ClientSyncStorage.INSTANCE.put(update.entryId(), update.value());
         }
+    }
+
+    public void sendTo(ServerPlayer player) {
+        NetworkManager.sendToPlayer(player, this);
+    }
+
+    public void sendToLevel(ServerLevel level) {
+        NetworkManager.sendToPlayers(level.players(), this);
+    }
+
+    public void sendToAll(MinecraftServer server) {
+        NetworkManager.sendToPlayers(server.getPlayerList().getPlayers(), this);
     }
 
     public record Update(String entryId, JsonElement value) {
