@@ -2,7 +2,7 @@
 
 CoryLib is a unified data storage and synchronization library for Minecraft mods.
 
-It targets **Minecraft 1.21.1** with **Architectury API**, and is designed for mods that need a clean way to store, retrieve, version, and synchronize data across server, dimension, player, and client contexts.
+Designed for mods that need a clean way to store, retrieve, version, and synchronize data across server, dimension, player, and client contexts.
 
 ## Why CoryLib?
 
@@ -39,17 +39,6 @@ public static final DataEntry<ServerPlayer, Integer> KILLS =
 - **Server-to-client sync:** immediate, tick-batched, or manual sync triggers.
 - **Client-side synced mirror:** read the latest received synced value with `getSynced()`.
 - **Architectury lifecycle integration:** data loads/saves through common Fabric and NeoForge events.
-
-## Supported Platforms
-
-| Platform | Version |
-| --- | --- |
-| Minecraft | 1.21.1 |
-| Java | 21+ |
-| Architectury API | 13.0.8+ |
-| Fabric Loader | 0.19.2+ |
-| Fabric API | 0.116.12+1.21.1 |
-| NeoForge | 21.1+ |
 
 ## Core Concepts
 
