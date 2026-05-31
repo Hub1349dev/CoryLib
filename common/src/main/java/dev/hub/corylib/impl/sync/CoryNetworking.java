@@ -22,7 +22,6 @@ public final class CoryNetworking {
             return;
         }
         registered = true;
-        NetworkManager.registerS2CPayloadType(DATA_SYNC, DATA_SYNC_CODEC);
         NetworkManager.registerReceiver(NetworkManager.Side.S2C, DATA_SYNC, DATA_SYNC_CODEC,
                 (message, context) -> context.queue(message::handle));
     }
