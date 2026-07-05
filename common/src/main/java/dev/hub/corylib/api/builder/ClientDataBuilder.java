@@ -21,7 +21,7 @@ public final class ClientDataBuilder<T> extends DataBuilder<ClientSubject, T, Cl
 
     @Override
     protected DataEntry<ClientSubject, T> createEntry(DataVersion dataVersion) {
-        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave, null, perWorld);
+        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave, null, perWorld, encrypted);
     }
 
     @Override

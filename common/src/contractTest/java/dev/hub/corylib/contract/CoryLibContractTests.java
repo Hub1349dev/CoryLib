@@ -133,6 +133,14 @@ public final class CoryLibContractTests {
         ContractAssertions.equals(Scopes.CLIENT, globalClient.scope(), "Client builder must use the client scope.");
         ContractAssertions.isTrue(!globalClient.perWorld(), "Client entries must default to global client storage.");
 
+        DataEntry<?, Integer> encryptedServer = context.server(id("server_encrypted"), Codec.INT)
+                .defaultValue(1)
+                .encrypted()
+                .version(1)
+                .build();
+        ContractAssertions.equals(Storage.DISK, encryptedServer.storage(), "encrypted() must select disk storage.");
+        ContractAssertions.isTrue(encryptedServer.encrypted(), "encrypted() must mark entries for encrypted disk writes.");
+
         DataEntry<ClientSubject, Integer> perWorldClient = context.client(id("client_world"), Codec.INT)
                 .defaultValue(1)
                 .perWorld()
@@ -327,6 +335,20 @@ public final class CoryLibContractTests {
         Files.createDirectories(corruptPath.getParent());
         Files.writeString(corruptPath, "not json");
         ContractAssertions.equals(99, corrupt.get(ClientSubject.INSTANCE), "Corrupt disk data must fall back to the default value.");
+
+        String encryptedKey = id("disk_encrypted");
+        DataEntry<ClientSubject, Integer> encrypted = clientDiskEntry(encryptedKey, false, true, 1, List.of(), () -> 11);
+        encrypted.set(ClientSubject.INSTANCE, 12345);
+        encrypted.save(ClientSubject.INSTANCE);
+        Path encryptedPath = root.resolve("corylib").resolve(encrypted.modId()).resolve(encryptedKey + ".json");
+        String encryptedFile = Files.readString(encryptedPath);
+        ContractAssertions.isTrue(encryptedFile.contains("_corylib_encrypted"),
+                "Encrypted disk entries must be marked as encrypted.");
+        ContractAssertions.isTrue(!encryptedFile.contains("12345"),
+                "Encrypted disk entries must not write the readable value to disk.");
+        encrypted.flush(ClientSubject.INSTANCE);
+        ContractAssertions.equals(12345, encrypted.get(ClientSubject.INSTANCE),
+                "Encrypted disk entries must decrypt before codec decoding.");
     }
 
     private static void migrationsValidateAndRunInOrder() {
@@ -415,6 +437,10 @@ public final class CoryLibContractTests {
     }
 
     private static DataEntry<ClientSubject, Integer> clientDiskEntry(String key, boolean perWorld, int version, List<Migration> migrations, java.util.function.Supplier<Integer> defaultValue) {
+        return clientDiskEntry(key, perWorld, false, version, migrations, defaultValue);
+    }
+
+    private static DataEntry<ClientSubject, Integer> clientDiskEntry(String key, boolean perWorld, boolean encrypted, int version, List<Migration> migrations, java.util.function.Supplier<Integer> defaultValue) {
         DataEntry<ClientSubject, Integer> entry = new DataEntry<>(
                 id("disk_mod"),
                 key,
@@ -426,7 +452,8 @@ public final class CoryLibContractTests {
                 null,
                 null,
                 null,
-                perWorld
+                perWorld,
+                encrypted
         );
         DataRegistry.INSTANCE.register(entry);
         return entry;

@@ -33,6 +33,7 @@ public static final DataEntry<ServerPlayer, Integer> KILLS =
 
 - **Four built-in scopes:** server, dimension, player, and client.
 - **Two storage modes:** JSON-backed disk storage and runtime memory storage.
+- **Optional encrypted disk files:** keep values decoded in memory while writing unreadable payloads on disk.
 - **Codec-based serialization:** values are encoded and decoded with Minecraft `Codec<T>`.
 - **Versioned JSON files:** persistent entries use a `_version` envelope.
 - **Migration support:** upgrade older JSON values before decoding.
@@ -62,6 +63,13 @@ Each entry belongs to exactly one scope. The scope determines what object owns t
 Stores the value as JSON under the save or game directory.
 
 ```java
+.encrypted()
+.version(1)
+```
+
+Stores the value encrypted on disk while keeping the decoded value in memory. `.encrypted()` selects disk storage, and old plain JSON files still load; the next save rewrites them encrypted.
+
+```java
 .storage(Storage.MEMORY)
 ```
 
@@ -87,6 +95,17 @@ Each file uses a stable envelope:
 {
   "_version": 1,
   "value": {}
+}
+```
+
+Encrypted files wrap that same envelope:
+
+```json
+{
+  "_corylib_encrypted": 1,
+  "algorithm": "AES/GCM/NoPadding",
+  "iv": "...",
+  "payload": "..."
 }
 ```
 

@@ -27,6 +27,7 @@ public abstract class DataBuilder<S, T, B extends DataBuilder<S, T, B>> {
     protected final List<Migration> migrations = new ArrayList<>();
     protected Consumer<DataEntry<S, T>> onLoad;
     protected Consumer<DataEntry<S, T>> onSave;
+    protected boolean encrypted;
 
     protected DataBuilder(CoryContext context, String key, Codec<T> codec, DataScope<S> scope) {
         this.context = Objects.requireNonNull(context, "context");
@@ -47,6 +48,12 @@ public abstract class DataBuilder<S, T, B extends DataBuilder<S, T, B>> {
 
     public B storage(StorageType storage) {
         this.storage = Objects.requireNonNull(storage, "storage");
+        return self();
+    }
+
+    public B encrypted() {
+        this.storage = Storage.DISK;
+        this.encrypted = true;
         return self();
     }
 
@@ -79,6 +86,9 @@ public abstract class DataBuilder<S, T, B extends DataBuilder<S, T, B>> {
         if (!Storage.DISK.equals(storage) && !Storage.MEMORY.equals(storage)) {
             throw new IllegalStateException("CoryLib entry '" + fullKey() + "' uses unsupported storage type '" + storage.id() + "'.");
         }
+        if (encrypted && !Storage.DISK.equals(storage)) {
+            throw new IllegalStateException("CoryLib encrypted entry '" + fullKey() + "' must use DISK storage.");
+        }
         if (Storage.DISK.equals(storage) && version == null) {
             throw new IllegalStateException("CoryLib DISK entry '" + fullKey() + "' must declare .version(int).");
         }
@@ -89,7 +99,7 @@ public abstract class DataBuilder<S, T, B extends DataBuilder<S, T, B>> {
     }
 
     protected DataEntry<S, T> createEntry(DataVersion dataVersion) {
-        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave);
+        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave, null, false, encrypted);
     }
 
     protected String fullKey() {

@@ -34,6 +34,7 @@ public final class DataEntry<S, T> {
     private final Consumer<DataEntry<S, T>> onSave;
     private final SyncTrigger syncTrigger;
     private final boolean perWorld;
+    private final boolean encrypted;
 
     public DataEntry(
             String modId,
@@ -46,7 +47,7 @@ public final class DataEntry<S, T> {
             Consumer<DataEntry<S, T>> onLoad,
             Consumer<DataEntry<S, T>> onSave
     ) {
-        this(modId, key, scope, codec, defaultValue, storage, version, onLoad, onSave, null, false);
+        this(modId, key, scope, codec, defaultValue, storage, version, onLoad, onSave, null, false, false);
     }
 
     public DataEntry(
@@ -62,6 +63,23 @@ public final class DataEntry<S, T> {
             SyncTrigger syncTrigger,
             boolean perWorld
     ) {
+        this(modId, key, scope, codec, defaultValue, storage, version, onLoad, onSave, syncTrigger, perWorld, false);
+    }
+
+    public DataEntry(
+            String modId,
+            String key,
+            DataScope<S> scope,
+            Codec<T> codec,
+            Supplier<T> defaultValue,
+            StorageType storage,
+            DataVersion version,
+            Consumer<DataEntry<S, T>> onLoad,
+            Consumer<DataEntry<S, T>> onSave,
+            SyncTrigger syncTrigger,
+            boolean perWorld,
+            boolean encrypted
+    ) {
         this.modId = Objects.requireNonNull(modId, "modId");
         this.key = Objects.requireNonNull(key, "key");
         this.scope = Objects.requireNonNull(scope, "scope");
@@ -73,6 +91,7 @@ public final class DataEntry<S, T> {
         this.onSave = onSave;
         this.syncTrigger = syncTrigger;
         this.perWorld = perWorld;
+        this.encrypted = encrypted;
         if (syncTrigger != null && !scope.syncSupported()) {
             throw new IllegalStateException("CoryLib scope '" + scope.id() + "' does not support server-to-client sync.");
         }
@@ -206,6 +225,10 @@ public final class DataEntry<S, T> {
 
     public boolean perWorld() {
         return perWorld;
+    }
+
+    public boolean encrypted() {
+        return encrypted;
     }
 
     public boolean synced() {

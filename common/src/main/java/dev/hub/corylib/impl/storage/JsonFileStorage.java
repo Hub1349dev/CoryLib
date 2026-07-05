@@ -29,6 +29,9 @@ public final class JsonFileStorage {
         try (Reader reader = Files.newBufferedReader(path)) {
             JsonElement root = JsonParser.parseReader(reader);
             JsonObject envelope = root.getAsJsonObject();
+            if (DiskEncryption.isEncrypted(envelope)) {
+                envelope = DiskEncryption.decrypt(entry, envelope);
+            }
             JsonElement value = envelope.get("value");
             DataVersion version = entry.version();
             if (version != null && envelope.has("_version")) {
@@ -55,6 +58,9 @@ public final class JsonFileStorage {
                 envelope.addProperty("_version", entry.version().currentVersion());
             }
             envelope.add("value", entry.encodeValue(value));
+            if (entry.encrypted()) {
+                envelope = DiskEncryption.encrypt(entry, envelope);
+            }
             try (Writer writer = Files.newBufferedWriter(path)) {
                 GSON.toJson(envelope, writer);
             }

@@ -23,6 +23,6 @@ public abstract class SyncedDataBuilder<S, T, B extends SyncedDataBuilder<S, T, 
 
     @Override
     protected DataEntry<S, T> createEntry(DataVersion dataVersion) {
-        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave, syncTrigger, false);
+        return new DataEntry<>(context.modId(), key, scope, codec, defaultValue, storage, dataVersion, onLoad, onSave, syncTrigger, false, encrypted);
     }
 }
